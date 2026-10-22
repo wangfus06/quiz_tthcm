@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trắc Nghiệm Tư Tưởng Hồ Chí Minh - Interactive Quiz</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-full flex flex-col justify-between selection:bg-red-500 selection:text-white">
+
+    <!-- Header -->
+    <header class="bg-red-700 text-white shadow-md py-4 px-4 sm:px-6 flex flex-col sm:flex-row justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center space-x-3 mb-2 sm:mb-0">
+            <span class="text-2xl">🇻🇳</span>
+            <div>
+                <h1 class="text-lg sm:text-xl font-bold tracking-tight">Trắc Nghiệm Tư Tưởng Hồ Chí Minh</h1>
+                <p class="text-xs text-red-100 opacity-90">Ngân hàng 100 câu hỏi chính thức • Luyện tập & Ôn tập thông minh</p>
+            </div>
+        </div>
+        <div id="stats-badge" class="bg-red-800 px-4 py-1.5 rounded-full text-xs font-medium border border-red-600 flex items-center space-x-3">
+            <span>Tiến độ: <strong id="progress-text">0/0</strong></span>
+            <span>•</span>
+            <span>Điểm: <strong id="score-text">0</strong></span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6 max-w-4xl mx-auto w-full">
+        
+        <!-- SCREEN 1: Start Screen -->
+        <div id="start-screen" class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full text-center border border-slate-100 transition-all duration-300">
+            <div class="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl shadow-inner">
+                📚
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900 mb-3">Ôn Tập Trắc Nghiệm Tư Tưởng Hồ Chí Minh</h2>
+            <p class="text-slate-600 mb-6 max-w-lg mx-auto text-sm leading-relaxed">
+                Hệ thống gồm trọn vẹn <span class="font-semibold text-red-600">100 câu hỏi chuẩn</span>. Cứ sau mỗi <span class="font-semibold text-red-600">10 câu hỏi</span>, nếu có câu trả lời sai, bạn sẽ được đưa vào chế độ <span class="font-semibold text-red-600">Ôn tập lại các câu sai</span> cho đến khi trả lời đúng mới được chuyển sang block tiếp theo.
+            </p>
+
+            <!-- Mode Selection -->
+            <div class="mb-8">
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Chọn số lượng câu hỏi làm bài:</label>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-md mx-auto">
+                    <button onclick="selectQuizMode(20)" id="mode-20" class="mode-btn bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold py-3 px-4 rounded-xl border-2 border-transparent transition-all text-sm">
+                        20 Câu Ngẫu Nhiên
+                    </button>
+                    <button onclick="selectQuizMode(50)" id="mode-50" class="mode-btn bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold py-3 px-4 rounded-xl border-2 border-transparent transition-all text-sm">
+                        50 Câu Ngẫu Nhiên
+                    </button>
+                    <button onclick="selectQuizMode(100)" id="mode-100" class="mode-btn bg-red-50 text-red-700 border-red-600 font-semibold py-3 px-4 rounded-xl border-2 transition-all text-sm">
+                        Toàn Bộ 100 Câu
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="startQuiz()" class="bg-red-600 hover:bg-red-700 active:scale-95 text-white font-semibold px-8 py-3.5 rounded-xl shadow-lg shadow-red-500/20 transition-all duration-200 flex items-center justify-center mx-auto space-x-2 text-base">
+                <span>Bắt đầu làm bài</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+        </div>
+
+        <!-- SCREEN 2: Quiz Screen -->
+        <div id="quiz-screen" class="hidden bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full border border-slate-100 flex flex-col justify-between">
+            <div>
+                <!-- Top Meta in Quiz -->
+                <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-4">
+                    <span id="quiz-mode-tag" class="text-xs font-semibold px-3 py-1 bg-amber-100 text-amber-800 rounded-full">Vòng chính thức</span>
+                    <span id="question-counter" class="text-sm font-semibold text-slate-500">Câu 1 / 100</span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-100 h-2 rounded-full mb-6 overflow-hidden">
+                    <div id="quiz-progress-bar" class="bg-red-600 h-full w-0 transition-all duration-300 rounded-full"></div>
+                </div>
+
+                <!-- Question Title -->
+                <h3 id="question-text" class="text-base sm:text-lg font-semibold text-slate-900 mb-6 leading-relaxed">
+                    <!-- Dynamic Question -->
+                </h3>
+
+                <!-- Options Grid -->
+                <div id="options-container" class="space-y-3 mb-6">
+                    <!-- Dynamic Options -->
+                </div>
+            </div>
+
+            <!-- Action footer within question -->
+            <div class="flex justify-between items-center pt-4 border-t border-slate-100 min-h-[50px]">
+                <div id="feedback-message" class="text-sm font-medium"></div>
+                <button id="next-btn" onclick="nextQuestion()" class="hidden bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl font-medium transition-all text-sm flex items-center space-x-2 ml-auto">
+                    <span>Câu tiếp theo</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: Block Review Screen (Triggered every 10 questions if there are mistakes) -->
+        <div id="review-screen" class="hidden bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full border border-slate-100">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                    🔁
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-2">Chế Độ Ôn Tập Câu Sai (Block vừa qua)</h2>
+                <p id="review-subtitle" class="text-slate-600 text-sm">Bạn đã chọn sai một số câu trong block 10 câu vừa rồi. Hãy trả lời chính xác lại toàn bộ các câu dưới đây để tiếp tục!</p>
+            </div>
+
+            <div id="review-content-area" class="space-y-6 max-h-[55vh] overflow-y-auto pr-2 mb-6">
+                <!-- Dynamic review items inserted here -->
+            </div>
+
+            <button id="finish-review-btn" onclick="resumeQuizAfterReview()" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-xl shadow-md transition-all text-center">
+                Hoàn thành ôn tập & Tiếp tục ➔
+            </button>
+        </div>
+
+        <!-- SCREEN 4: Completion Screen -->
+        <div id="result-screen" class="hidden bg-white rounded-2xl shadow-xl p-8 w-full text-center border border-slate-100">
+            <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl shadow-inner">
+                🏆
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">Chúc Mừng Bạn Đã Hoàn Thành!</h2>
+            <p class="text-slate-600 mb-6 text-sm">Bạn đã xuất sắc vượt qua toàn bộ các câu hỏi trắc nghiệm Tư Tưởng Hồ Chí Minh.</p>
+            
+            <div class="bg-slate-50 border border-slate-100 rounded-2xl p-6 max-w-sm mx-auto mb-8 flex justify-around items-center">
+                <div>
+                    <span class="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Số câu đúng</span>
+                    <span id="final-correct" class="text-2xl font-bold text-emerald-600">0</span>
+                </div>
+                <div class="h-8 w-px bg-slate-200"></div>
+                <div>
+                    <span class="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Tổng số câu</span>
+                    <span id="final-total" class="text-2xl font-bold text-slate-700">100</span>
+                </div>
+                <div class="h-8 w-px bg-slate-200"></div>
+                <div>
+                    <span class="block text-xs text-slate-400 uppercase tracking-wider font-semibold mb-1">Tỷ lệ chính xác</span>
+                    <span id="final-percent" class="text-2xl font-bold text-red-600">0%</span>
+                </div>
+            </div>
+
+            <button onclick="restartQuiz()" class="bg-red-600 hover:bg-red-700 text-white font-semibold px-8 py-3 rounded-xl shadow-lg transition-all">
+                Làm lại từ đầu
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="text-center py-4 text-xs text-slate-400">
+        Biên soạn bởi TS. Trương Thị Như • Web App Ôn Tập Thông Minh
+    </footer>
+
+    <script>
+        // FULL 100 QUESTIONS DATA DIRECTLY EMBEDDED
+        const rawQuestions = [
+            { id: 1, q: "“Đảng lấy chủ nghĩa Mác - Lênin và tư tưởng Hồ Chí Minh làm nền tảng tư tưởng, kim chỉ nam cho hành động”, câu nói trên lần đầu tiên được Đảng Cộng sản Việt Nam khẳng định tại:", options: ["Đại hội Đảng toàn quốc lần thứ IV (1976)", "Đại hội Đảng toàn quốc lần thứ V (1981)", "Đại hội Đảng toàn quốc lần thứ VI (1986)", "Đại hội Đảng toàn quốc lần thứ VII (1991)"], answer: 3 },
+            { id: 2, q: "Nội dung cốt lõi của tư tưởng Hồ Chí Minh là:", options: ["Độc lập dân tộc gắn liền với chủ nghĩa xã hội", "Giải phóng dân tộc", "Giải phóng giai cấp", "Giải phóng con người"], answer: 0 },
+            { id: 3, q: "UNESCO ra Nghị quyết 24C/18.65 tôn vinh Chủ tịch Hồ Chí Minh là Anh hùng giải phóng dân tộc và danh nhân văn hóa kiệt xuất vào năm:", options: ["Năm 1969", "Năm 1975", "Năm 1987", "Năm 1990"], answer: 2 },
+            { id: 4, q: "Một trong những nguồn gốc của tư tưởng Hồ Chí Minh là tiếp thu:", options: ["Lòng nhân ái, đức hy sinh của Hồi giáo.", "Các giá trị văn hóa tiến bộ của thời kỳ Phục hưng.", "Giá trị truyền thống dân tộc.", "Văn hóa Phục hưng"], answer: 2 },
+            { id: 5, q: "Một trong những nguồn gốc của tư tưởng Hồ Chí Minh là tiếp thu:", options: ["Tinh hoa văn hóa nhân loại.", "Các giá trị văn hóa tiến bộ của thời kỳ Phục hưng.", "Toàn bộ tư tưởng của các nhà khai sáng.", "Lòng nhân ái, đức hy sinh của Hồi giáo."], answer: 0 },
+            { id: 6, q: "\"Dân tộc ta, nhân dân ta, non sông đất nước ta đã sinh ra Hồ Chủ tịch, Người anh hùng dân tộc vĩ đại, và chính Người đã làm rạng rỡ dân tộc ta, nhân dân ta và non sông đất nước ta\". Đó là khẳng định của:", options: ["Đồng chí Võ Nguyên Giáp", "Đồng chí Trường Chinh", "Đồng chí Phạm Văn Đồng", "Ban Chấp hành Trung ương Đảng Lao động Việt Nam"], answer: 3 },
+            { id: 7, q: "Ngày 21/6/1925, tờ báo do Hồ Chí Minh sáng lập xuất bản số đầu tiên, đánh dấu sự ra đời của nền báo chí cách mạng Việt Nam. Tờ báo đó là:", options: ["Báo Thanh niên", "Báo Người cùng khổ (Le Paria)", "Báo Nhân dân", "Báo Tuổi trẻ"], answer: 0 },
+            { id: 8, q: "\"Luận cương của V. I. Lênin làm cho tôi rất cảm động, phấn khởi, sáng tỏ, tin tưởng biết bao. Tôi vui mừng đến phát khóc lên. Ngồi một mình trong buồng mà tôi nói to lên như đang nói trước quần chúng đông đảo: Hỡi đồng bào bị đọa đày đau khổ, đây là cái cần thiết cho chúng ta, đây là con đường giải phóng của chúng ta\". Nguyễn Ái Quốc nói câu ấy khi đang ở đâu?", options: ["Luân Đôn, Anh", "Quảng Châu, Trung Quốc", "Paris, Pháp", "Matxcơva, Nga"], answer: 2 },
+            { id: 9, q: "Giai đoạn tìm tòi con đường cứu nước, giải phóng dân tộc của Chủ tịch Hồ Chí Minh được tính từ:", options: ["1890 - 1911", "1911 - 1920", "1921 - 1930", "1930 - 1941"], answer: 1 },
+            { id: 10, q: "Giai đoạn hình thành cơ bản tư tưởng về con đường cách mạng Việt Nam của Chủ tịch Hồ Chí Minh được tính từ:", options: ["1911 - 1920", "1921 - 1930", "1930 - 1941", "1941 - 1969"], answer: 1 },
+            { id: 11, q: "Giai đoạn hình thành tư tưởng yêu nước và chí hướng cứu nước của Chủ tịch Hồ Chí Minh được tính từ:", options: ["1890 - 1911", "1911 - 1920", "1921 - 1930", "1930 - 1941"], answer: 0 },
+            { id: 12, q: "Giai đoạn vượt qua thử thách, kiên trì giữ vững lập trường cách mạng của Chủ tịch Hồ Chí Minh được tính từ:", options: ["1911 - 1920", "1921 - 1930", "1930 - 1941", "1941 - 1969"], answer: 2 },
+            { id: 13, q: "Giai đoạn tư tưởng Hồ Chí Minh tiếp tục phát triển hoàn thiện được tính từ:", options: ["1911 - 1920", "1921 - 1930", "1930 - 1941", "1941 - 1969"], answer: 3 },
+            { id: 14, q: "Nguồn gốc quyết định bản chất tư tưởng Hồ Chí Minh là:", options: ["Giá trị truyền thống dân tộc", "Chủ nghĩa Mác - Lênin", "Tinh hoa văn hóa nhân loại", "Phẩm chất cá nhân Hồ Chí Minh"], answer: 1 },
+            { id: 15, q: "Năm 1925, Hồ Chí Minh đã cải tổ Tâm Tâm xã thành tổ chức nào?", options: ["Hội Việt Nam Cách mạng thanh niên", "Đảng Phục Việt", "Đảng Hưng Nam", "Việt Nam Quốc dân Đảng"], answer: 0 },
+            { id: 16, q: "Một trong những nội dung cơ bản trong bản Yêu sách gồm tám điểm của Nguyễn Ái Quốc gửi đến Hội nghị Vecxây (Pháp) là:", options: ["Đòi quyền tự do dân chủ tối thiểu cho nhân dân An Nam.", "Đòi quyền độc lập dân tộc.", "Đòi quyền tự trị của dân tộc.", "Cả 3 ý đều sai"], answer: 0 },
+            { id: 17, q: "Lãnh tụ Nguyễn Ái Quốc đi tìm đường cứu nước khi nào?", options: ["Ngày 5/6/1910", "Ngày 6/5/1911", "Ngày 5/6/1911", "Ngày 19/5/1911"], answer: 2 },
+            { id: 18, q: "Khi xuống con tàu Latuso Tơrevin đi tìm đường cứu nước, Bác Hồ lấy tên gọi là:", options: ["Nguyễn Sinh Cung", "Nguyễn Tất Thành", "Nguyễn Ái Quốc", "Văn Ba"], answer: 3 },
+            { id: 19, q: "Nguyễn Ái Quốc tìm thấy con đường giải phóng dân tộc theo khuynh hướng chính trị vô sản vào thời gian nào? Ở đâu?", options: ["6/1919 - Pháp", "12/1920 - Pháp", "7/1920 - Liên Xô", "7/1920 - Pháp"], answer: 3 },
+            { id: 20, q: "Nguyễn Ái Quốc đọc Sơ thảo lần thứ nhất Luận cương về những vấn đề dân tộc và vấn đề thuộc địa của Lênin khi nào? Ở đâu?", options: ["7/1920 - Liên Xô", "7/1920 - Pháp", "7/1920 - Trung Quốc", "7/1920 - Anh"], answer: 1 },
+            { id: 21, q: "Khi giải thích về con đường đến với chủ nghĩa Lênin, Chủ tịch Hồ Chí Minh viết: \"Lúc đầu, chính là (....), chứ chưa phải chủ nghĩa cộng sản đã đưa tôi tin theo Lênin, tin theo Quốc tế thứ ba\". Hãy điền vào chỗ còn thiếu:", options: ["Chủ nghĩa Mác", "Lòng yêu nước", "Chủ nghĩa dân tộc", "Chủ nghĩa yêu nước"], answer: 3 },
+            { id: 22, q: "Lãnh tụ Nguyễn Ái Quốc sau 30 năm tìm đường cứu nước đã trở về Tổ quốc vào ngày:", options: ["28/1/1941", "8/2/1943", "28/1/1942", "8/2/1944"], answer: 0 },
+            { id: 23, q: "Hoàn thành luận điểm nổi tiếng của Hồ Chí Minh: “Nếu nước được ….. mà dân không hưởng hạnh phúc tự do, thì …… cũng chẳng có nghĩa lý gì”:", options: ["Độc lập", "Tự do", "Giải phóng", "Hòa bình"], answer: 0 },
+            { id: 24, q: "Theo Hồ Chí Minh, độc lập, tự do là:", options: ["Tạo hóa ban cho con người.", "Trách nhiệm của các nước lớn phải bảo đảm cho các nước nhỏ.", "Mong muốn của các dân tộc.", "Quyền thiêng liêng, bất khả xâm phạm của tất cả các dân tộc."], answer: 3 },
+            { id: 25, q: "Chủ tịch Hồ Chí Minh đã từng dạy học ở ngôi trường nào?", options: ["Trường Tiểu học Vinh", "Trường Pháp Việt Đông Ba (Huế)", "Trường Quốc học Huế", "Trường Dục Thanh (Phan Thiết)"], answer: 3 },
+            { id: 26, q: "Theo Hồ Chí Minh, cách mạng giải phóng dân tộc muốn thắng lợi phải:", options: ["Đi theo con đường của các bậc cách mạng tiền bối Việt Nam.", "Đi theo con đường của cách mạng Pháp, Mỹ.", "Đi theo con đường cách mạng vô sản.", "Đi theo con đường Cách mạng tháng 10 Nga"], answer: 2 },
+            { id: 27, q: "Cách mạng giải phóng dân tộc muốn thắng lợi phải:", options: ["Có đoàn thể lãnh đạo.", "Có Đảng của giai cấp công nhân lãnh đạo.", "Có một cá nhân xuất sắc lãnh đạo.", "Cả 3 ý đều sai"], answer: 1 },
+            { id: 28, q: "Cách mạng giải phóng dân tộc là sự nghiệp đoàn kết của:", options: ["Giai cấp công nhân.", "Giai cấp công nhân và nông dân", "Toàn dân, trên cơ sở liên minh công - nông.", "Các dân tộc thuộc địa"], answer: 2 },
+            { id: 29, q: "Cách mạng giải phóng dân tộc muốn giành được thắng lợi cần phải:", options: ["Tiến hành chủ động và sáng tạo.", "Dựa vào sự thắng lợi của cách mạng ở các nước thuộc địa khác.", "Dựa vào thắng lợi của cách mạng vô sản ở chính quốc.", "Dựa vào sự giúp đỡ của các nước XHCN"], answer: 0 },
+            { id: 30, q: "Cách mạng giải phóng dân tộc muốn giành được thắng lợi phải:", options: ["Thực hiện bằng con đường bạo động, ám sát những tên ác ôn.", "Sử dụng bạo lực cách mạng", "Tiến hành đấu tranh nghị trường", "Thực hiện đấu tranh chính trị hòa bình"], answer: 1 },
+            { id: 31, q: "Bạo lực cách mạng theo tư tưởng Hồ Chí Minh là:", options: ["Đấu tranh chính trị.", "Đấu tranh vũ trang.", "Kết hợp đấu tranh chính trị với đấu tranh vũ trang.", "Bạo động ám sát cá nhân"], answer: 2 },
+            { id: 32, q: "“Trong lúc này, thời cơ thuận lợi đã tới. Dù hi sinh tới đâu, dù phải đốt cháy cả dãy Trường Sơn cũng phải kiên quyết giành cho được độc lập”. Hồ Chí Minh đã chỉ thị điều đó cho ai?", options: ["Võ Nguyên Giáp", "Trường Chinh", "Phạm Văn Đồng", "Vũ Kỳ"], answer: 0 },
+            { id: 33, q: "Năm 1944, Hồ Chí Minh đã ra chỉ thị thành lập:", options: ["Việt Nam tuyên truyền giải phóng quân", "Việt Nam giải phóng quân", "Giải phóng quân", "Việt Nam Cứu quốc quân"], answer: 0 },
+            { id: 34, q: "Nguyễn Ái Quốc gửi bản Yêu sách của nhân dân Việt Nam tới Hội nghị Véc - xây vào thời gian nào?", options: ["Ngày 18/06/1917", "Ngày 18/06/1919", "Ngày 18/06/1920", "Ngày 18/06/1921"], answer: 1 },
+            { id: 35, q: "Hồ Chí Minh đã dùng hình tượng nào để chỉ chủ nghĩa tư bản?", options: ["Con đỉa hai vòi", "Con bạch tuộc", "Con chim đại bàng", "Con rắn độc"], answer: 0 },
+            { id: 36, q: "Năm 1946, trả lời phỏng vấn báo chí, Chủ tịch Hồ Chí Minh đã khẳng định ham muốn tột bậc của Người là:", options: ["Nước ta được hoàn toàn độc lập", "Dân ta được hoàn toàn tự do", "Đồng bào ai cũng có cơm ăn, áo mặc, ai cũng được học hành.", "Tất cả phương án trên"], answer: 3 },
+            { id: 37, q: "“Đồng bào Nam Bộ là dân nước Việt Nam. Sông có thể cạn, núi có thể mòn, song chân lý đó không bao giờ thay đổi”. Luận điểm trên được Chủ tịch Hồ Chí Minh đề cập đến trong tác phẩm:", options: ["Thư gửi Ủy ban nhân dân các Kỳ, tỉnh, huyện và làng 1945", "Thư gửi đồng bào Nam Bộ 1946", "Sửa đổi lối làm việc 1947", "Di chúc 1969"], answer: 1 },
+            { id: 38, q: "Điền từ vào chỗ trống theo tư tưởng Hồ Chí Minh: \"Cách mệnh trước hết phải có đảng cách mệnh, để trong thì (....) dân chúng, ngoài thì liên lạc với các dân tộc bị áp bức và vô sản giai cấp mọi nơi\".", options: ["Tập hợp và lãnh đạo", "Vận động và tổ chức", "Tập hợp và giác ngộ", "Tổ chức và lãnh đạo"], answer: 1 },
+            { id: 39, q: "Điền từ còn thiếu: Theo Hồ Chí Minh: \"Đảng có (...) cách mạng mới thành công, cũng như người cầm lái có (....) thuyền mới chạy\".", options: ["Chắc", "Sáng suốt", "Vững", "Đúng"], answer: 2 },
+            { id: 40, q: "Theo tư tưởng Hồ Chí Minh:", options: ["Cách mạng giải phóng dân tộc (CMGPDT) phụ thuộc hoàn toàn vào CMVS ở chính quốc", "CMGPDT cùng diễn ra và giành thắng lợi đồng thời với CMVS ở chính quốc", "CMGPDT có khả năng nổ ra và giành thắng lợi trước CMVS ở chính quốc", "CMGPDT cần được tiến hành chủ động, sáng tạo và có khả năng giành thắng lợi trước CMVS ở chính quốc"], answer: 3 },
+            { id: 41, q: "Theo Hồ Chí Minh: “Công cuộc giải phóng anh em chỉ có thể thực hiện được bằng sự nỗ lực của …….”.", options: ["Giai cấp công nhân", "Nhân dân lao động", "Bản thân anh em", "Cả dân tộc"], answer: 2 },
+            { id: 42, q: "Luận điểm nổi tiếng: \"Không có gì quý hơn độc lập, tự do\" được Hồ Chí Minh nói trong:", options: ["Đường kách mệnh 1927", "Tuyên Ngôn độc lập 1945", "Lời kêu gọi Toàn quốc kháng chiến 19/12/1946", "Lời kêu gọi chống Mỹ cứu nước 17/7/1966"], answer: 3 },
+            { id: 43, q: "Năm 1951, Hồ Chí Minh chỉ rõ mục đích của Đảng Lao động Việt Nam có thể gồm trong 8 chữ là:", options: ["Thực hiện đại đoàn kết toàn dân tộc", "Đoàn kết toàn dân, xây dựng đất nước", "Đoàn kết toàn dân, phụng sự Tổ quốc", "Hòa bình, độc lập, thống nhất, giàu mạnh"], answer: 2 },
+            { id: 44, q: "\"Đảng có vững cách mạng mới thành công, cũng như người cầm lái có vững thuyền mới chạy\". Đó là khẳng định của Hồ Chí Minh trong tác phẩm:", options: ["Đường kách mệnh 1927", "Tuyên Ngôn độc lập 1945", "Lời kêu gọi Toàn quốc kháng chiến 1946", "Lời kêu gọi chống Mỹ cứu nước 1966"], answer: 0 },
+            { id: 45, q: "Trước khi rời bến Nhà Rồng, Nguyễn Tất Thành đã nói với bạn của mình: “Tôi muốn đi ra nước ngoài, xem nước Pháp và các nước khác. Sau khi xem xét họ làm như thế nào, tôi sẽ …….”. Hoàn thành câu nói trên:", options: ["Truyền đạt lại cho đồng bào chúng ta.", "Trở về giúp đồng bào chúng ta.", "Lên kế hoạch giúp đồng bào chúng ta.", "Chiến đấu chống lại kẻ thù của chúng ta."], answer: 1 },
+            { id: 46, q: "Trong cuộc họp Hội đồng Chính phủ ngày 29/12/1966, Chủ tịch Hồ Chí Minh nêu lên luận điểm: “Không sợ ….., chỉ sợ không công bằng; Không sợ ….., chỉ sợ lòng dân không yên”. Điền từ con thiếu:", options: ["Thiếu … nghèo", "Đói … nghèo", "Thiếu … giàu", "Kém … đầy"], answer: 0 },
+            { id: 47, q: "Theo Hồ Chí Minh, muốn xây dựng chủ nghĩa xã hội thì trước hết cần có:", options: ["Khoa học kĩ thuật hiện đại", "Lực lượng sản xuất phát triển", "Cơ sở vật chất kĩ thuật", "Những con người xã hội chủ nghĩa"], answer: 3 },
+            { id: 48, q: "Theo Tư tưởng Hồ Chí Minh, động lực chủ yếu của sự phát triển đất nước là:", options: ["Con người cá nhân", "Đại đoàn kết dân tộc", "Sự giúp đỡ của nước ngoài", "Đoàn kết quốc tế"], answer: 1 },
+            { id: 49, q: "Hồ Chí Minh đã chỉ ra 3 lực cản của chủ nghĩa xã hội, đó là: Chủ nghĩa thực dân, thói quen truyền thống lạc hậu và (......).", options: ["Giặc đói", "Giặc dốt", "Giặc ngoại xâm", "Chủ nghĩa cá nhân"], answer: 3 },
+            { id: 50, q: "Theo tư tưởng Hồ Chí Minh, chế độ chính trị mà chúng ta xây dựng là chế độ:", options: ["Do giai cấp công nhân làm chủ.", "Do giai cấp nông dân làm chủ.", "Do nhân dân lao động làm chủ.", "Do Đảng cộng sản làm chủ"], answer: 2 },
+            { id: 51, q: "Theo Hồ Chí Minh, nền kinh tế mà chúng ta xây dựng phải được tạo lập trên cơ sở:", options: ["Nền nông nghiệp hiện đại.", "Nền công nghiệp hiện đại.", "Khoa học kĩ thuật tiên tiến", "Tất cả các đáp án"], answer: 3 },
+            { id: 52, q: "Theo Hồ Chí Minh, động lực quan trọng và bao trùm nhất của CNXH là:", options: ["Vốn.", "Tài nguyên thiên nhiên.", "Con người.", "Khoa học kĩ thuật"], answer: 2 },
+            { id: 53, q: "Theo Hồ Chí Minh, nguyên tắc phân phối chủ yếu của CNXH là gì?", options: ["Làm theo năng lực hưởng theo nhu cầu", "Phân phối bình quân cho tất cả mọi người", "Làm ít hưởng nhiều, làm nhiều hưởng ít", "Làm theo năng lực hưởng theo lao động"], answer: 3 },
+            { id: 54, q: "Muốn phát huy động lực của chủ nghĩa xã hội, theo Hồ Chí Minh cần phải chống:", options: ["Chủ nghĩa cá nhân, tham ô, lãng phí, quan liêu.", "Chia rẽ, bè phái, mất đoàn kết, vô kỷ luật, chủ quan, bảo thủ, giáo điều, lười biếng.", "Chủ nghĩa đế quốc thực dân", "Tất cả đều đúng."], answer: 3 },
+            { id: 55, q: "Theo quan điểm của chủ nghĩa Mác - Lênin, có mấy con đường quá độ lên CNXH?", options: ["2 con đường", "3 con đường", "4 con đường", "5 con đường"], answer: 0 },
+            { id: 56, q: "Theo Hồ Chí Minh, đặc điểm cơ bản nhất của nước ta trong thời kỳ quá độ là:", options: ["Từ một nước nông nghiệp lạc hậu tiến thẳng lên chủ nghĩa xã hội không phải trải qua giai đoạn phát triển tư bản chủ nghĩa.", "Bị chiến tranh tàn phá nặng nề.", "Từ một nước thuộc địa nửa phong kiến", "Tất cả đều đúng."], answer: 0 },
+            { id: 57, q: "Căn cứ vào thực tiễn xây dựng chủ nghĩa xã hội ở Việt Nam, theo Hồ Chí Minh, độ dài của thời kỳ quá độ lên chủ nghĩa xã hội ở nước ta là:", options: ["15 năm.", "20 năm.", "50 năm", "Lâu dài."], answer: 3 },
+            { id: 58, q: "Nội dung nào sau đây được coi là vấn đề “cốt tử” trong xây dựng Đảng?", options: ["Xây dựng và thực hiện nghị quyết", "Xây dựng và phát triển hệ Đảng viên", "Củng cố lập trường chính trị", "Xây dựng đường lối chính trị"], answer: 3 },
+            { id: 59, q: "Theo Hồ Chí Minh khi thực hiện bước đi trong thời kỳ quá độ, chúng ta phải thực hiện phương châm:", options: ["Tuần tự, dần dần, từ thấp đến cao", "Tiến nhanh, mạnh, vững chắc lên CNXH", "Tránh tư tưởng chủ quan, nóng vội, phù hợp với thực tiễn, hợp lòng dân.", "Tất cả các đáp án"], answer: 3 },
+            { id: 60, q: "Theo Hồ Chí Minh, về bước đi trong thời kỳ quá độ, chúng ta phải:", options: ["Theo bước đi của các nước xã hội chủ nghĩa.", "Căn cứ vào đặc điểm lịch sử cụ thể của nước ta, từ đó có bước đi phù hợp", "Căn cứ vào đặc điểm lịch sử cụ thể của nước ta, từ đó có bước đi phù hợp, đi bước nào vững chắc bước ấy.", "Đi theo các nước tư bản"], answer: 2 },
+            { id: 61, q: "Theo Hồ Chí Minh, Đảng cộng sản Việt Nam là sản phẩm của sự kết hợp giữa:", options: ["Chủ nghĩa Mác - Lênin với phong trào công nhân", "Chủ nghĩa Mác - Lênin với phong trào nông dân", "Chủ nghĩa Mác - Lênin với phong trào yêu nước", "Chủ nghĩa Mác - Lênin với phong trào công nhân và phong trào yêu nước."], answer: 3 },
+            { id: 62, q: "Tác phẩm nào sau đây không phải của Hồ Chí Minh?", options: ["Kháng chiến nhất định thắng lợi", "Bản án chế độ thực dân Pháp", "Đường kách mệnh", "Đời sống mới"], answer: 0 },
+            { id: 63, q: "Đảng Cộng sản Việt Nam là Đảng của giai cấp công nhân, của nhân dân lao động và của toàn dân tộc. Điều đó khẳng định:", options: ["Vai trò của Đảng", "Lợi ích của Đảng", "Lý tưởng của Đảng", "Bản chất của Đảng"], answer: 3 },
+            { id: 64, q: "Nguyên tắc xây dựng Đảng này được Hồ Chí Minh coi như là một \"thang thuốc\" để chữa các \"bệnh\" trong Đảng. Nguyên tắc đó là:", options: ["Tập trung dân chủ", "Kỉ luật nghiêm minh tự giác", "Tự phê bình và phê bình", "Đoàn kết thống nhất trong Đảng"], answer: 2 },
+            { id: 65, q: "Theo tư tưởng Hồ Chí Minh, luận điểm Đảng Cộng sản là nhân tố quyết định hàng đầu để đưa cách mạng Việt Nam đi đến thắng lợi là:", options: ["Xác định vị thế cầm quyền của Đảng", "Xác định mục đích của Đảng.", "Xác định nhiệm vụ của Đảng.", "Xác định vai trò lãnh đạo của Đảng."], answer: 3 },
+            { id: 66, q: "Theo Hồ Chí Minh, Đảng Cộng sản Việt Nam phải lấy chủ nghĩa Mác - Lênin “làm cốt” nghĩa là:", options: ["Đảng Cộng sản Việt Nam phải lấy chủ nghĩa Mác - Lênin làm nền tảng tư tưởng.", "Đảng Cộng sản Việt Nam phải lấy chủ nghĩa Mác - Lênin làm nền tảng tư tưởng và kim chỉ nam.", "Đảng Cộng sản Việt Nam phải lấy chủ nghĩa Mác - Lênin làm kim chỉ nam", "Không đáp án nào đúng."], answer: 1 },
+            { id: 67, q: "Khi xác định lực lượng của khối đại đoàn kết toàn dân tộc, Hồ Chí Minh chỉ rõ: “Ta đoàn kết để đấu tranh cho thống nhất và độc lập của Tổ quốc, Ta còn phải đoàn kết để xây dựng nước nhà. Ai có tài, có đức, có sức, có …… thì ta đoàn kết với họ”. Hoàn thành vào phần còn thiếu:", options: ["Lòng phụng sự tổ quốc và phục vụ nhân dân", "Đạo đức trong sáng", "Ý chí cách mạng", "Lòng yêu nước"], answer: 0 },
+            { id: 68, q: "Trong tư tưởng Hồ Chí Minh, đại đoàn kết toàn dân tộc:", options: ["Là vấn đề cơ bản nhất", "Là vấn đề sống còn của cách mạng.", "Là vấn đề có ý nghĩa chiến lược, quyết định thành công của cách mạng.", "Là vấn đề số một của cách mạng"], answer: 2 },
+            { id: 69, q: "Trong tư tưởng Hồ Chí Minh, đại đoàn kết dân tộc:", options: ["Là mục tiêu của cách mạng.", "Là nhiệm vụ hàng đầu của cách mạng.", "Là vấn đề số một của cách mạng", "Là mục tiêu, nhiệm vụ hàng đầu của Đảng, của dân tộc."], answer: 3 },
+            { id: 70, q: "Trong tư tưởng Hồ Chí Minh, “điểm này mà thực hiện tốt thì đẻ ra con cháu đều tốt”. Điểm đó là:", options: ["Đại đoàn kết toàn dân tộc", "Lòng yêu nước nồng nàn", "Tinh thần chiến đấu anh dũng", "Sự giúp đỡ của bè bạn thế giới"], answer: 0 },
+            { id: 71, q: "Trong tư tưởng Hồ Chí Minh, nền tảng của khối đại đoàn kết dân tộc là:", options: ["Liên minh công-nông", "Liên minh công-nông, lao động trí óc.", "Liên minh công-nông và tư sản", "Liên minh công-nông và địa chủ"], answer: 1 },
+            { id: 72, q: "Trong Tuyên ngôn độc lập, Hồ Chí Minh đã khẳng định quyết tâm của nhân dân ta: \"Toàn thể dân tộc Việt Nam quyết đem (.....) để giữ vững quyền tự do, độc lập ấy\". Điền từ vào chỗ trống:", options: ["Toàn bộ sức lực", "Tất cả tinh thần và lực lượng", "Tính mạng và của cải", "Tất cả tinh thần và lực lượng, tính mạng và của cải"], answer: 3 },
+            { id: 73, q: "Theo tư tưởng Hồ Chí Minh, Đảng là người “đầy tớ” của dân. Ý nghĩa của từ “đầy tớ” là:", options: ["Tôi tớ, tôi đòi", "Theo đuôi quần chúng", "Tận tâm, tận lực phụng sự nhân dân", "Không đáp án nào đúng"], answer: 2 },
+            { id: 74, q: "Khi đề cập đến phương thức xây dựng khối đại đoàn kết toàn dân tộc, Hồ Chí Minh khẳng định: “Dân vận khéo, việc gì cũng thành công”. Luận điểm trên được Hồ Chí Minh đề cập đến trong tác phẩm:", options: ["Dân vận", "Sửa đổi lối làm việc", "Đạo đức cách mạng", "Di chúc"], answer: 0 },
+            { id: 75, q: "Chủ tịch Hồ Chí Minh nhấn mạnh: “Đảng ta là Đảng cầm quyền. Mỗi đảng viên và cán bộ phải thật sự thấm nhuần đạo đức cách mạng, thật sự cần kiệm liêm chính, chí công vô tư”. Luận điểm trên được Hồ Chí Minh đề cập đến trong tác phẩm nào?", options: ["Đường kách mệnh 1927", "Đời sống mới 1947", "Đạo đức cách mạng 1958", "Di chúc 1969"], answer: 3 },
+            { id: 76, q: "Điền từ vào chỗ trống: Chủ tịch Hồ Chí Minh đã khẳng định chính sách ngoại giao của Việt Nam sau khi tuyên bố độc lập là: \"Làm bạn với tất cả …… và không gây thù oán với một ai\".", options: ["Tất cả các dân tộc", "Các nước xã hội chủ nghĩa", "Mọi nước dân chủ", "Các dân tộc bị áp bức"], answer: 2 },
+            { id: 77, q: "Khi nói về tinh thần đoàn kết quốc tế, Hồ Chí Minh đã viết: \"Quan sơn muôn dặm một nhà, ……. đều là anh em!\". Điền từ vào chỗ trống:", options: ["Lao động thế giới", "Bốn phương vô sản", "Vàng đen trắng đỏ", "Nhân dân thế giới"], answer: 1 },
+            { id: 78, q: "Chọn phương án đúng nhất điền vào chỗ trống để hoàn thiện câu nói của Hồ Chí Minh: “Thi đua là yêu nước, yêu nước là thi đua. Và những người thi đua là những người……”", options: ["Giỏi nhất", "Hăng hái nhất", "Yêu nước nhất", "Cách mạng nhất"], answer: 2 },
+            { id: 79, q: "Trong phiên họp đầu tiên của Chính phủ lâm thời nước Việt Nam Dân chủ Cộng hòa, Chủ tịch Hồ Chí Minh đã nêu ra 6 nhiệm vụ cấp bách cần phải giải quyết. Phiên họp đó diễn ra vào thời gian nào?", options: ["Ngày 02/9/1945", "Ngày 03/9/1945", "Ngày 04/9/1945", "Ngày 05/9/1945"], answer: 1 },
+            { id: 80, q: "Theo Hồ Chí Minh, \"Nước ta là nước dân chủ, nghĩa là (.....)\"", options: ["Nước nhà do nhân dân làm chủ", "Dân quản lý điều hành đất nước", "Dân có mọi quyền hành", "Dân quyết định mọi vấn đề của đất nước"], answer: 0 },
+            { id: 81, q: "Nhà nước của dân theo tư tưởng Hồ Chí Minh nghĩa là:", options: ["Mọi quyền lực trong nhà nước và trong xã hội đều thuộc về nhân dân.", "Mọi công việc của nhà nước do dân quyết định.", "Đại biểu của nhà nước do dân bầu ra.", "Tất cả đều đúng."], answer: 0 },
+            { id: 82, q: "Nhà nước do dân theo tư tưởng Hồ Chí Minh:", options: ["Đại biểu của nhà nước do dân lựa chọn.", "Dân ủng hộ, giúp đỡ, đóng thuế để nhà nước chi tiêu, hoạt động.", "Dân có quyền kiểm soát, giám sát, bãi miễn nếu đại biểu không làm tròn sự uỷ thác của dân.", "Tất cả đều đúng."], answer: 3 },
+            { id: 83, q: "Nhà nước vì dân theo tư tưởng Hồ Chí Minh là:", options: ["Phục vụ vì lợi ích và nguyện vọng chính đáng của nhân dân.", "Mọi chủ trương, chính sách, pháp luật đều xuất phát từ lợi ích của dân.", "Nhà nước trong sạch, không có bất cứ một đặc quyền, đặc lợi nào.", "Tất cả đều đúng"], answer: 3 },
+            { id: 84, q: "Một nhà nước pháp quyền có hiệu lực pháp lý mạnh mẽ theo tư tưởng Hồ Chí Minh phải là:", options: ["Nhà nước hợp hiến, hợp pháp.", "Nhà nước thượng tôn pháp luật", "Nhà nước pháp quyền nhân nghĩa", "Tất cả đều đúng."], answer: 3 },
+            { id: 85, q: "Cơ chế vận hành của hệ thống chính trị nước ta là:", options: ["Nhà nước lãnh đạo, Đảng quản lý, nhân dân làm chủ", "Nhà nước làm chủ, Đảng lãnh đạo, nhân dân quản lý", "Đảng lãnh đạo, nhà nước quản lý, nhân dân làm chủ", "Nhân dân lãnh đạo, nhà nước quản lý, đảng làm chủ"], answer: 2 },
+            { id: 86, q: "“Không có việc gì khó/ Chỉ sợ lòng không bền/ Đào núi và lấp biển/ Quyết chí ắt làm nên”. Câu thơ nổi tiếng trên được Hồ Chí Minh nói vào năm:", options: ["1945", "1946", "1950", "1969"], answer: 2 },
+            { id: 87, q: "Theo tư tưởng Hồ Chí Minh, đạo đức có vai trò:", options: ["Là nền tảng lý luận của người cách mạng.", "Là gốc của người cách mạng, là nền tảng tinh thần của xã hội.", "Là định hướng lý tưởng của người cách mạng.", "Là tư tưởng của người cách mạng."], answer: 1 },
+            { id: 88, q: "Theo Hồ Chí Minh, muốn xây dựng đạo đức mới phải thực hiện nguyên tắc:", options: ["Nói đi đôi với làm.", "Xây đi đôi với chống.", "Tu dưỡng đạo đức suốt đời.", "Tất cả đều đúng."], answer: 3 },
+            { id: 89, q: "Điền vào phần còn thiếu theo quan điểm Hồ Chí Minh: “Trời có bốn mùa Xuân, Hạ, Thu, Đông. Đất có bốn phương Đông, Tây, Nam, Bắc. Người có…”:", options: ["Bốn đức Cần, Kiệm, Liêm, Chính", "Tinh thần quốc tế trong sáng.", "Phẩm chất trung với nước, hiếu với dân.", "Yêu thương con người, sống có tình nghĩa."], answer: 0 },
+            { id: 90, q: "Hoàn thành luận điểm của Hồ Chí Minh, “Trong bầu trời không gì quý bằng ... Trong thế giới không gì mạnh bằng lực lượng đoàn kết của …”:", options: ["Bạn bè", "Nhân dân", "Tình cảm", "Con người"], answer: 1 },
+            { id: 91, q: "Trong Bài nói tại lớp bồi dưỡng cán bộ lãnh đạo cấp huyện ngày 18/1/1967, Hồ Chí Minh khẳng định: “Dễ mười lần không dân cũng …., Khó trăm lần dân liệu cũng xong”. Từ còn thiếu là:", options: ["Mệt", "Khổ", "Chịu", "Bỏ"], answer: 2 },
+            { id: 92, q: "Trong thư gửi các họa sĩ nhân triển lãm hội họa 1951, Chủ tịch Hồ Chí Minh khẳng định: “Văn hóa nghệ thuật cũng là một mặt trận. Anh chị em là chiến sĩ trên mặt trận ấy”. Quan điểm trên của Hồ Chí Minh muốn đề cập đến:", options: ["Vai trò của văn hóa nghệ thuật", "Đặc điểm của nghệ sĩ", "Vai trò của nhà nước", "Tất cả đều đúng."], answer: 0 },
+            { id: 93, q: "Ngày 28/11/1959, Chủ tịch Hồ Chí Minh viết bài trên báo Nhân dân và phát động:", options: ["Tết thiếu nhi", "Tết trồng cây", "Tết Đoan ngọ", "Tất cả đáp án trên"], answer: 1 },
+            { id: 94, q: "Năm 1923, tạp chí Ogoniok (Ngọn lửa nhỏ) số 39 đã đăng bài về Nguyễn Ái Quốc, trong đó có viết: “Từ Nguyễn Ái Quốc tỏa ra một nền văn hóa, không phải là văn hóa châu Âu mà có lẽ là nền văn hóa của tương lai”. Tác giả của nhận xét đó là ai?", options: ["Nhà văn Sơn Tùng", "Nhà nghiên cứu Ép-ghê-nhi Ca-bê-lép", "Nhà thơ Xô viết Ô-xip Man-đen-stam", "V.I.Lênin"], answer: 2 },
+            { id: 95, q: "Trong thư gửi thanh niên và nhi đồng toàn quốc nhân dịp Tết sắp đến, Chủ tịch Hồ Chí Minh viết: “Một năm (....) từ mùa xuân. Một đời (.....) từ tuổi trẻ. Tuổi trẻ là mùa xuân của xã hội”. Điền từ vào chỗ trống:", options: ["Bắt đầu", "Khởi đầu", "Bước đầu", "Mở đầu"], answer: 1 },
+            { id: 96, q: "Theo Hồ Chí Minh: \"Sức có mạnh mới gánh được nặng và đi được xa. Người cách mạng phải có (.....) làm nền tảng mới hoàn thành được nhiệm vụ cách mạng vẻ vang\".", options: ["Sức khỏe", "Tài năng", "Tài năng và đức độ", "Đạo đức cách mạng"], answer: 3 },
+            { id: 97, q: "Theo Hồ Chí Minh: \"Văn hóa (......) cho quốc dân đi\"", options: ["Dẫn đường", "Mở đường", "Soi đường", "Tìm đường"], answer: 2 },
+            { id: 98, q: "Theo tư tưởng Hồ Chí Minh: \"Học để làm việc, (....), làm cán bộ\"", options: ["Làm cách mạng", "Phục vụ nhân dân", "Có tri thức", "Làm người"], answer: 3 },
+            { id: 99, q: "Hồ Chí Minh đưa ra hình ảnh: “Ngọc càng mài càng sáng, vàng càng luyện càng trong” để nói về:", options: ["Ý chí cách mạng", "Đạo đức cách mạng", "Truyền thống yêu nước", "Truyền thống đại đoàn kết"], answer: 1 },
+            { id: 100, q: "Chỉ thị 05-CT/TW về “Đẩy mạnh học tập và làm theo tư tưởng, đạo đức, phong cách Hồ Chí Minh” được Bộ Chính trị ban hành vào ngày:", options: ["Ngày 15/5/2016", "Ngày 19/5/2016", "Ngày 19/5/2017", "Ngày 02/9/2018"], answer: 0 }
+        ];
+
+        // State variables
+        let selectedCount = 100;
+        let activeQuestions = [];
+        let currentIndex = 0;
+        let score = 0;
+        let currentBlockMistakes = []; // Mistakes in current 10-question window
+        let reviewIndex = 0;
+        let isAnsweredCurrent = false;
+
+        function selectQuizMode(count) {
+            selectedCount = count;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.className = "mode-btn bg-slate-100 text-slate-700 hover:bg-slate-200 font-semibold py-3 px-4 rounded-xl border-2 border-transparent transition-all text-sm";
+            });
+            const selectedBtn = document.getElementById(`mode-${count}`);
+            if (selectedBtn) {
+                selectedBtn.className = "mode-btn bg-red-50 text-red-700 border-red-600 font-semibold py-3 px-4 rounded-xl border-2 transition-all text-sm";
+            }
+        }
+
+        function shuffle(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function startQuiz() {
+            if (selectedCount === 100) {
+                activeQuestions = shuffle(rawQuestions);
+            } else {
+                activeQuestions = shuffle(rawQuestions).slice(0, selectedCount);
+            }
+
+            currentIndex = 0;
+            score = 0;
+            currentBlockMistakes = [];
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            
+            updateHeaderStats();
+            loadQuestion();
+        }
+
+        function updateHeaderStats() {
+            document.getElementById('progress-text').innerText = `${currentIndex}/${activeQuestions.length}`;
+            document.getElementById('score-text').innerText = score;
+        }
+
+        function loadQuestion() {
+            isAnsweredCurrent = false;
+            const qData = activeQuestions[currentIndex];
+
+            // Progress bar & counters
+            document.getElementById('question-counter').innerText = `Câu ${currentIndex + 1} / ${activeQuestions.length}`;
+            const progressPercent = ((currentIndex) / activeQuestions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${progressPercent}%`;
+
+            document.getElementById('question-text').innerText = `Câu ${qData.id}: ${qData.q}`;
+            document.getElementById('feedback-message').innerHTML = '';
+            document.getElementById('next-btn').classList.add('hidden');
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            const prefixes = ['A', 'B', 'C', 'D'];
+            qData.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl border-2 border-slate-200 hover:border-red-300 hover:bg-slate-50 transition-all font-medium text-slate-700 flex items-start space-x-3 text-sm";
+                btn.onclick = () => handleSelectOption(idx);
+                btn.id = `option-btn-${idx}`;
+                btn.innerHTML = `
+                    <span class="font-bold text-slate-400 select-none min-w-[20px]">${prefixes[idx]}.</span>
+                    <span>${opt}</span>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+
+            updateHeaderStats();
+        }
+
+        function handleSelectOption(selectedIndex) {
+            if (isAnsweredCurrent) return;
+            isAnsweredCurrent = true;
+
+            const qData = activeQuestions[currentIndex];
+            const isCorrect = (selectedIndex === qData.answer);
+
+            // Disable all option buttons
+            qData.options.forEach((_, idx) => {
+                const btn = document.getElementById(`option-btn-${idx}`);
+                btn.onclick = null;
+                btn.classList.remove('hover:border-red-300', 'hover:bg-slate-50');
+            });
+
+            const selectedBtn = document.getElementById(`option-btn-${selectedIndex}`);
+            const correctBtn = document.getElementById(`option-btn-${qData.answer}`);
+            const feedbackEl = document.getElementById('feedback-message');
+
+            if (isCorrect) {
+                selectedBtn.classList.remove('border-slate-200');
+                selectedBtn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-900');
+                feedbackEl.innerHTML = `<span class="text-emerald-600 font-bold flex items-center gap-1">✓ Chinh xác!</span>`;
+                score++;
+            } else {
+                selectedBtn.classList.remove('border-slate-200');
+                selectedBtn.classList.add('border-rose-500', 'bg-rose-50', 'text-rose-900');
+                
+                correctBtn.classList.remove('border-slate-200');
+                correctBtn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-900');
+                
+                feedbackEl.innerHTML = `<span class="text-rose-600 font-bold flex items-center gap-1">✗ Chưa chính xác</span>`;
+                
+                // Track mistake for the current 10-question review block
+                if (!currentBlockMistakes.some(item => item.id === qData.id)) {
+                    currentBlockMistakes.push(qData);
+                }
+            }
+
+            updateHeaderStats();
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentIndex++;
+
+            // Check if we completed a block of 10 questions OR reached the end of quiz
+            if (currentIndex % 10 === 0 || currentIndex === activeQuestions.length) {
+                if (currentBlockMistakes.length > 0) {
+                    showReviewScreen();
+                    return;
+                }
+            }
+
+            if (currentIndex < activeQuestions.length) {
+                loadQuestion();
+            } else {
+                showResultScreen();
+            }
+        }
+
+        // ==================== BLOCK REVIEW SYSTEM ====================
+
+        function showReviewScreen() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('review-screen').classList.remove('hidden');
+
+            const reviewContainer = document.getElementById('review-content-area');
+            reviewContainer.innerHTML = '';
+
+            document.getElementById('finish-review-btn').classList.add('opacity-50', 'pointer-events-none');
+
+            const prefixes = ['A', 'B', 'C', 'D'];
+
+            currentBlockMistakes.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = "p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-3";
+                card.id = `review-card-${index}`;
+
+                let optionsHTML = '';
+                item.options.forEach((opt, optIdx) => {
+                    optionsHTML += `
+                        <button id="rev-opt-${index}-${optIdx}" 
+                                onclick="handleReviewOptionSelect(${index}, ${optIdx}, ${item.answer})" 
+                                class="w-full text-left p-3 rounded-xl border border-slate-300 bg-white hover:border-amber-400 font-medium text-slate-700 transition-all text-sm flex items-start space-x-2">
+                            <span class="font-bold text-slate-400 min-w-[18px]">${prefixes[optIdx]}.</span>
+                            <span>${opt}</span>
+                        </button>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start gap-2">
+                        <span class="text-xs font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-md">Làm lại câu ${item.id}</span>
+                        <span id="rev-status-${index}" class="text-xs font-semibold text-rose-600">Cần trả lời đúng</span>
+                    </div>
+                    <p class="font-semibold text-slate-800 text-sm sm:text-base">${item.q}</p>
+                    <div class="space-y-2 pt-1">${optionsHTML}</div>
+                `;
+
+                reviewContainer.appendChild(card);
+            });
+
+            // Mark solved items state tracking
+            currentBlockMistakes.map(item => item.isResolved = false);
+        }
+
+        function handleReviewOptionSelect(cardIndex, selectedIdx, correctIdx) {
+            const prefixes = ['A', 'B', 'C', 'D'];
+            const card = document.getElementById(`review-card-${cardIndex}`);
+            const statusEl = document.getElementById(`rev-status-${cardIndex}`);
+            
+            const selectedBtn = document.getElementById(`rev-opt-${cardIndex}-${selectedIdx}`);
+            const correctBtn = document.getElementById(`rev-opt-${cardIndex}-${correctIdx}`);
+
+            if (selectedIdx === correctIdx) {
+                // Correct choice in review mode
+                currentBlockMistakes[cardIndex].isResolved = true;
+                
+                // Disable options for this review card
+                currentBlockMistakes[cardIndex].options.forEach((_, idx) => {
+                    const btn = document.getElementById(`rev-opt-${cardIndex}-${idx}`);
+                    btn.onclick = null;
+                });
+
+                selectedBtn.className = "w-full text-left p-3 rounded-xl border-2 border-emerald-500 bg-emerald-50 font-medium text-emerald-900 transition-all text-sm flex items-start space-x-2";
+                statusEl.className = "text-xs font-semibold text-emerald-600 flex items-center gap-1";
+                statusEl.innerHTML = "✓ Đã sửa đúng";
+
+                checkAllReviewsResolved();
+            } else {
+                // Incorrect choice in review mode
+                selectedBtn.className = "w-full text-left p-3 rounded-xl border-2 border-rose-500 bg-rose-50 font-medium text-rose-900 transition-all text-sm flex items-start space-x-2";
+                correctBtn.className = "w-full text-left p-3 rounded-xl border-2 border-emerald-500 bg-emerald-50 font-medium text-emerald-900 transition-all text-sm flex items-start space-x-2";
+                
+                statusEl.className = "text-xs font-semibold text-rose-600";
+                statusEl.innerHTML = "✗ Thử lại!";
+            }
+        }
+
+        function checkAllReviewsResolved() {
+            const allResolved = currentBlockMistakes.every(item => item.isResolved);
+            if (allResolved) {
+                const finishBtn = document.getElementById('finish-review-btn');
+                finishBtn.classList.remove('opacity-50', 'pointer-events-none');
+                finishBtn.classList.add('animate-bounce');
+            }
+        }
+
+        function resumeQuizAfterReview() {
+            currentBlockMistakes = []; // Clear mistakes after successful review block
+            document.getElementById('review-screen').classList.add('hidden');
+
+            if (currentIndex < activeQuestions.length) {
+                document.getElementById('quiz-screen').classList.remove('hidden');
+                loadQuestion();
+            } else {
+                showResultScreen();
+            }
+        }
+
+        // ==================== END RESULT SCREEN ====================
+
+        function showResultScreen() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('review-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            document.getElementById('final-correct').innerText = score;
+            document.getElementById('final-total').innerText = activeQuestions.length;
+            const percent = Math.round((score / activeQuestions.length) * 100);
+            document.getElementById('final-percent').innerText = `${percent}%`;
+        }
+
+        function restartQuiz() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
